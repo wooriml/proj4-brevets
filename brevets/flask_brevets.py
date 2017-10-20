@@ -55,11 +55,16 @@ def _calc_times():
     km = request.args.get('km', 999, type=float)
     app.logger.debug("km={}".format(km))
     app.logger.debug("request.args: {}".format(request.args))
-    # FIXME: These probably aren't the right open and close times
-    # and brevets may be longer than 200km
-    open_time = acp_times.open_time(km, 200, arrow.now().isoformat)
-    close_time = acp_times.close_time(km, 200, arrow.now().isoformat)
+
+    brevet_distance = request.args.get('distance', 0, type=int)
+    start_date = request.args.get('begin_date', type=str)
+    start_time = request.args.get('begin_time', type=str)
+    now = arrow.get(start_date +start_time).isoformat()
+
+    open_time = str(acp_times.open_time(km, brevet_distance, now))
+    close_time = str(acp_times.close_time(km, brevet_distance, now))
     result = {"open": open_time, "close": close_time}
+    print(result)
     return flask.jsonify(result=result)
 
 
@@ -72,3 +77,12 @@ if app.debug:
 if __name__ == "__main__":
     print("Opening for global access on port {}".format(CONFIG.PORT))
     app.run(port=CONFIG.PORT, host="0.0.0.0")
+
+
+
+
+
+
+
+
+    
