@@ -54,7 +54,7 @@
 <!-- Design on bootstrap grid -->
 <form role="form">
 <div class="row">
-  <div class="col-md-4">
+  <div class="col-md-4 col-xs-6">
     <label>Distance</label>
   <select name="distance" id="brevet_dist_km">
     <option value="200">200km</option>
@@ -64,7 +64,7 @@
     <option value="1000">1000km</option>
   </select>
   </div> <!-- columns 1--4  -->
-  <div class="col-md-6">
+  <div class="col-md-6 col-xs-6">
     <label>Begins at</label>
     <input type=date name="begin_date" id="begin_date" value="2017-01-01" />
     <input type=time name="begin_time" id="begin_time" value="00:00"    />
@@ -77,7 +77,7 @@
        one.  We allocate it the full 12 columns of the bootstrap grid.
   -->
   <div class="row">
-  <div class="col-md-12"> 
+  <div class="col-md-12 col-mx-9 text-center"> 
   <table class="control_time_table">
       <tr>
 	<th> Miles </th>
@@ -87,6 +87,7 @@
 	<th>Close</th>
 	<th>Notes</th>
       </tr>
+
    {% for row in range(20) %}
     <tr class="control">
       <!-- Dist (mi) -->
@@ -100,9 +101,9 @@
         placeholder="Optional location name"
 	size="20" /> </td>
       <!-- Open time (read only, set by JavaScript function -->
-      <td><input name="open" type="datetime" value="" readonly /></td>
+      <td><input name="open" type="datetime" value="" readonly size="23"/></td>
       <!-- Close time (read only, set by JavaScript function -->
-      <td><input name="close" type="datetime" value="" readonly /></td>
+      <td><input name="close" type="datetime" value="" readonly size="23"/></td>
       <!-- Notes (error messages for this row) -->
       <td class="notes"> &nbsp; </td>
     </tr>
@@ -113,28 +114,36 @@
 </form>
 
 <script type="text/javascript">
-
   var SCRIPT_ROOT = {{ request.script_root|tojson|safe }} ;
   var TIME_CALC_URL = SCRIPT_ROOT + "/_calc_times";
-
   // Pass calctimes a <td> element containing the data for a control.
   // It extracts the distance and calls the server to get times to
   // fill in open and close times in a human-readable format.
   // (If we want to also keep the ISO-formatted times, we'll need to
   // stash them in hidden fields.) 
+
   function calc_times(control) {
     var km = control.find("input[name='km']").val();
     var open_time_field = control.find("input[name='open']");
     var close_time_field = control.find("input[name='close']");
-    
-    $.getJSON(TIME_CALC_URL, { km: km }, 
-      // response handler
+    var b_dist = $('#brevet_dist_km').val();
+    var sdate = $('#begin_date').val();
+    var stime = $('#begin_time').val();
+
+
+    $.getJSON(TIME_CALC_URL, { km: km, distance:b_dist, begin_date:sdate, begin_time:stime}, 
+      // from km, distance, begin_date, begin_time in the input/select tool, make it to use it in flask_brevets.py
       function(data) {
          var times = data.result;
-         console.log("Got a response: " +  times);
-         console.log("Response.open = " + times.open);
-         open_time_field.val( moment(times.open).format("ddd M/D H:mm"));
-         close_time_field.val( moment(times.close).format("ddd M/D H:mm"));
+         //console.log("Got a response: " +  times["open_time"] + times["close_time"]);
+         console.log("Response.open = " + times.open + times.close);
+         //console.log(moment(times.open));
+         //console.log(moment(times.open).utc().format("LLLL"));
+         open_time_field.val( moment(times.open).utc().format("llll")); // utc(): time zone,llll:automatically formats day, date, year, date
+
+         close_time_field.val( moment(times.close).utc().format("llll"));
+         //zero_close_time_field.val(moment(begin_date+begin_time)).utc().format("llll");
+
        } // end of handler function
      );// End of getJSON
     }
